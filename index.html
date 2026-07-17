@@ -43,6 +43,7 @@
             box-shadow: 0 5px 15px rgba(255, 71, 126, 0.4);
             margin-top: 20px;
             transition: transform 0.2s;
+            z-index: 100;
         }
         .btn:hover { transform: scale(1.05); }
 
@@ -58,6 +59,7 @@
             line-height: 1.5;
             display: none;
             animation: popIn 0.5s ease forwards;
+            z-index: 50;
         }
 
         @keyframes popIn {
@@ -252,11 +254,11 @@
             <div class="envelope" id="env">
                 <div class="letter">
                     <h3 style="color: #ff477e; margin-top: 0;">My Special Birthday Letter 💌</h3>
-                    <p>Dear Bunny,</p>
+                    <p>Dear [Naam Yahan Likhein],</p>
                     <p>Happy Birthday to you! I wanted to make something unique just for you, which is why you played all these mini-games to get here. 🙈</p>
                     <p>Words always fall short when I try to express how truly special you are to me. You possess such a beautiful, gentle soul. I pray that this year brings you unlimited success, radiant health, and answers to all your unspoken prayers. May any trace of sadness leave your path forever.</p>
                     <p>Thank you for simply being you. Always stay blessed and happy! 🌸✨</p>
-                    <p style="font-weight: bold; color: #ff477e; margin-bottom: 0;">With endless love,<br>your girl</p>
+                    <p style="font-weight: bold; color: #ff477e; margin-bottom: 0;">With endless love,<br>[Apna Naam]</p>
                 </div>
             </div>
         </div>
@@ -269,13 +271,17 @@
         function nextScreen(scrNum) {
             document.getElementById(`scr-${scrNum}`).classList.remove('active');
             currentScreen = scrNum + 1;
-            document.getElementById(`scr-${currentScreen}`).classList.add('active');
+            
+            let targetScr = document.getElementById(`scr-${currentScreen}`);
+            if(targetScr) {
+                targetScr.classList.add('active');
+            }
             
             if(currentScreen === 2) startBalloonGame();
             if(currentScreen === 3) startHeartGame();
         }
 
-        // LEVEL 1: Balloon Game Logic
+        // LEVEL 1: Balloon Game Logic (With Fixed Touch/Click Support)
         let popScore = 0;
         let balloonInterval;
         function startBalloonGame() {
@@ -290,17 +296,23 @@
                 balloon.style.left = Math.random() * (canvas.offsetWidth - 60) + 'px';
                 balloon.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
                 
-                balloon.onclick = () => {
+                function popAction(e) {
+                    if(e) e.preventDefault();
                     popScore++;
                     document.getElementById('score-1').innerText = `Score: ${popScore} / 5`;
                     balloon.remove();
                     if(popScore === 5) {
+                        clearInterval(balloonInterval);
                         canvas.style.display = 'none';
                         document.getElementById('msg-1').style.display = 'block';
                     }
-                };
+                }
+
+                balloon.addEventListener('click', popAction);
+                balloon.addEventListener('touchstart', popAction);
+
                 canvas.appendChild(balloon);
-                setTimeout(() => { balloon.remove(); }, 4000);
+                setTimeout(() => { if(balloon.parentNode) balloon.remove(); }, 4000);
             }, 800);
         }
 
@@ -352,7 +364,7 @@
                     }
                 }, 50);
 
-                setTimeout(() => { heart.remove(); clearInterval(checkCollision); }, 3000);
+                setTimeout(() => { if(heart.parentNode) heart.remove(); clearInterval(checkCollision); }, 3000);
             }, 1200);
         }
 
