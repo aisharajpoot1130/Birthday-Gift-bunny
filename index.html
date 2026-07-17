@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Birthday Quest! 🎁</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            background-color: #ffe5ec;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            height: 100vh;
+            user-select: none;
+        }
+
+        /* Common Screen Setup */
+        .screen {
+            display: none;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            padding: 20px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .active { display: flex; }
+
+        .btn {
+            background: #ff477e;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            border-radius: 25px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 71, 126, 0.4);
+            margin-top: 20px;
+            transition: transform 0.2s;
+        }
+        .btn:hover { transform: scale(1.05); }
+
+        .message-box {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: 15px auto;
+            color: #4f5d75;
+            font-size: 1.1rem;
+            line-height: 1.5;
+            display: none;
+            animation: popIn 0.5s ease forwards;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* SCREEN 1: Ribbon Box */
+        .gift-box-main {
+            font-size: 120px;
+            cursor: pointer;
+            animation: shake 1.5s infinite;
+        }
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            20%, 60% { transform: rotate(-10deg); }
+            40%, 80% { transform: rotate(10deg); }
+        }
+
+        /* SCREEN 2: Balloon Popper */
+        #game-canvas-1 {
+            width: 100%;
+            height: 60vh;
+            position: relative;
+            background: #fff0f3;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px dashed #ffb3c1;
+        }
+        .game-balloon {
+            width: 50px;
+            height: 60px;
+            border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+            position: absolute;
+            cursor: pointer;
+            animation: floatUpGame 4s linear forwards;
+        }
+        @keyframes floatUpGame {
+            0% { bottom: -70px; opacity: 1; }
+            100% { bottom: 105%; opacity: 0; }
+        }
+
+        /* SCREEN 3: Heart Catcher */
+        #game-canvas-2 {
+            width: 100%;
+            height: 60vh;
+            position: relative;
+            background: #ffe3e8;
+            border-radius: 15px;
+            overflow: hidden;
+            border: 2px dashed #ffb3c1;
+        }
+        .falling-heart {
+            position: absolute;
+            font-size: 30px;
+            animation: fall 3s linear forwards;
+        }
+        #basket {
+            width: 80px;
+            height: 40px;
+            background: #ff477e;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 0 0 15px 15px;
+            box-shadow: inset 0 5px 0 #ff7096;
+        }
+        @keyframes fall {
+            0% { top: -40px; }
+            100% { top: 105%; }
+        }
+
+        /* SCREEN 4: Envelope & Final Letter */
+        .envelope-wrapper {
+            position: relative;
+            cursor: pointer;
+            margin-top: 50px;
+        }
+        .envelope {
+            width: 200px;
+            height: 130px;
+            background: #ff7096;
+            position: relative;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .envelope::before {
+            content: '';
+            position: absolute;
+            top: -70px; left: 0;
+            border-left: 100px solid transparent;
+            border-right: 100px solid transparent;
+            border-bottom: 70px solid #ff7096;
+            transition: transform 0.5s;
+            transform-origin: bottom;
+        }
+        .envelope.open::before {
+            transform: rotateX(180deg) translateY(70px);
+            z-index: 5;
+        }
+        .letter {
+            width: 180px;
+            background: white;
+            position: absolute;
+            top: 10px; left: 10px;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 -5px 10px rgba(0,0,0,0.05);
+            transition: all 1s ease;
+            z-index: 2;
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+        .envelope.open .letter {
+            max-height: 400px;
+            width: 320px;
+            left: -60px;
+            top: -280px;
+            opacity: 1;
+            overflow-y: auto;
+            z-index: 10;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        /* Decorative Background Elements (Pure CSS) */
+        .bg-deco {
+            position: absolute;
+            font-size: 25px;
+            opacity: 0.2;
+            animation: spin 6s infinite linear;
+            z-index: 1;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- Deco items around the screen -->
+    <div class="bg-deco" style="top:10%; left:10%;">✨</div>
+    <div class="bg-deco" style="top:15%; right:15%; animation-delay: 2s;">🌸</div>
+    <div class="bg-deco" style="bottom:15%; left:12%;">⭐</div>
+    <div class="bg-deco" style="bottom:10%; right:10%; animation-delay: 4s;">🎉</div>
+
+    <!-- SCREEN 1: Welcome & Ribbon Box -->
+    <div class="screen active" id="scr-1">
+        <h1 style="color: #ff477e; margin-bottom: 5px;">Your Birthday Quest! 🌸</h1>
+        <p style="color: #4f5d75; margin-top: 0;">Unwrap the gift to start your little adventure...</p>
+        <div class="gift-box-main" onclick="nextScreen(1)">🎁</div>
+        <p style="color: #ff7096; font-weight: bold; margin-top: 20px;">Tap the Gift Box!</p>
+    </div>
+
+    <!-- SCREEN 2: Balloon Popper Game -->
+    <div class="screen" id="scr-2">
+        <h2 style="color: #ff477e;">Level 1: Balloon Popper 🎈</h2>
+        <p style="color: #4f5d75; margin-top: 0;">Pop 5 balloons to unlock the first cute message!</p>
+        <h3 style="color: #ff7096; margin: 5px;" id="score-1">Score: 0 / 5</h3>
+        
+        <div id="game-canvas-1"></div>
+
+        <div class="message-box" id="msg-1">
+            <h3>💌 Message #1 unlocked!</h3>
+            <p>"You are absolutely one of the most amazing people in my life. Just like these bright balloons, you bring so much color and happiness wherever you go! Never stop smiling." ✨</p>
+            <button class="btn" onclick="nextScreen(2)">Go to Level 2 ➡️</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 3: Heart Catcher Game -->
+    <div class="screen" id="scr-3">
+        <h2 style="color: #ff477e;">Level 2: Catch the Hearts ❤️</h2>
+        <p style="color: #4f5d75; margin-top: 0;">Move your finger/mouse to catch 3 falling hearts!</p>
+        <h3 style="color: #ff7096; margin: 5px;" id="score-2">Hearts: 0 / 3</h3>
+
+        <div id="game-canvas-2" onmousemove="moveBasket(event)" ontouchmove="moveBasketTouch(event)">
+            <div id="basket"></div>
+        </div>
+
+        <div class="message-box" id="msg-2">
+            <h3>💖 Message #2 unlocked!</h3>
+            <p>"May your life be caught up in endless loops of joy and love, just like this game! You deserve all the beautifully pure things in the world. So proud of who you are!" 🥰</p>
+            <button class="btn" onclick="nextScreen(3)">Unlock Final Surprise 🔓</button>
+        </div>
+    </div>
+
+    <!-- SCREEN 4: Final Envelope and Special Letter -->
+    <div class="screen" id="scr-4">
+        <h2 style="color: #ff477e; margin-bottom: 5px;">The Final Surprise ✨</h2>
+        <p style="color: #4f5d75; margin-top: 0;">Tap the envelope to read your special birthday letter.</p>
+        
+        <div class="envelope-wrapper" onclick="openLetter()">
+            <div class="envelope" id="env">
+                <div class="letter">
+                    <h3 style="color: #ff477e; margin-top: 0;">My Special Birthday Letter 💌</h3>
+                    <p>Dear [Naam Yahan Likhein],</p>
+                    <p>Happy Birthday to you! I wanted to make something unique just for you, which is why you played all these mini-games to get here. 🙈</p>
+                    <p>Words always fall short when I try to express how truly special you are to me. You possess such a beautiful, gentle soul. I pray that this year brings you unlimited success, radiant health, and answers to all your unspoken prayers. May any trace of sadness leave your path forever.</p>
+                    <p>Thank you for simply being you. Always stay blessed and happy! 🌸✨</p>
+                    <p style="font-weight: bold; color: #ff477e; margin-bottom: 0;">With endless love,<br>[Apna Naam]</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentScreen = 1;
+        
+        // Navigation function
+        function nextScreen(scrNum) {
+            document.getElementById(`scr-${scrNum}`).classList.remove('active');
+            currentScreen = scrNum + 1;
+            document.getElementById(`scr-${currentScreen}`).classList.add('active');
+            
+            if(currentScreen === 2) startBalloonGame();
+            if(currentScreen === 3) startHeartGame();
+        }
+
+        // LEVEL 1: Balloon Game Logic
+        let popScore = 0;
+        let balloonInterval;
+        function startBalloonGame() {
+            const canvas = document.getElementById('game-canvas-1');
+            const colors = ['#ff477e', '#ff7096', '#fca311', '#4ea8de', '#9b5de5', '#70e000'];
+            
+            balloonInterval = setInterval(() => {
+                if(popScore >= 5) { clearInterval(balloonInterval); return; }
+                
+                const balloon = document.createElement('div');
+                balloon.classList.add('game-balloon');
+                balloon.style.left = Math.random() * (canvas.offsetWidth - 60) + 'px';
+                balloon.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                
+                balloon.onclick = () => {
+                    popScore++;
+                    document.getElementById('score-1').innerText = `Score: ${popScore} / 5`;
+                    balloon.remove();
+                    if(popScore === 5) {
+                        canvas.style.display = 'none';
+                        document.getElementById('msg-1').style.display = 'block';
+                    }
+                };
+                canvas.appendChild(balloon);
+                setTimeout(() => { balloon.remove(); }, 4000);
+            }, 800);
+        }
+
+        // LEVEL 2: Heart Catcher Logic
+        let heartScore = 0;
+        let heartInterval;
+        const basket = document.getElementById('basket');
+        const canvas2 = document.getElementById('game-canvas-2');
+
+        function moveBasket(e) {
+            const rect = canvas2.getBoundingClientRect();
+            let x = e.clientX - rect.left;
+            if(x > 40 && x < canvas2.offsetWidth - 40) {
+                basket.style.left = x + 'px';
+            }
+        }
+        function moveBasketTouch(e) {
+            const rect = canvas2.getBoundingClientRect();
+            let x = e.touches[0].clientX - rect.left;
+            if(x > 40 && x < canvas2.offsetWidth - 40) {
+                basket.style.left = x + 'px';
+            }
+        }
+
+        function startHeartGame() {
+            heartInterval = setInterval(() => {
+                if(heartScore >= 3) { clearInterval(heartInterval); return; }
+
+                const heart = document.createElement('div');
+                heart.classList.add('falling-heart');
+                heart.innerHTML = '❤️';
+                heart.style.left = Math.random() * (canvas2.offsetWidth - 40) + 'px';
+                canvas2.appendChild(heart);
+
+                let checkCollision = setInterval(() => {
+                    let hRect = heart.getBoundingClientRect();
+                    let bRect = basket.getBoundingClientRect();
+
+                    if(hRect.bottom >= bRect.top && hRect.right >= bRect.left && hRect.left <= bRect.right && hRect.top <= bRect.bottom) {
+                        heartScore++;
+                        document.getElementById('score-2').innerText = `Hearts: ${heartScore} / 3`;
+                        heart.remove();
+                        clearInterval(checkCollision);
+                        if(heartScore === 3) {
+                            clearInterval(heartInterval);
+                            canvas2.style.display = 'none';
+                            document.getElementById('msg-2').style.display = 'block';
+                        }
+                    }
+                }, 50);
+
+                setTimeout(() => { heart.remove(); clearInterval(checkCollision); }, 3000);
+            }, 1200);
+        }
+
+        // FINAL LEVEL: Open Envelope Letter
+        function openLetter() {
+            document.getElementById('env').classList.add('open');
+        }
+    </script>
+</body>
+</html>
